@@ -6,6 +6,11 @@
 
 http://ecoponica.ru/wordpress/
 
+Все настроено, но установка не проводилас.
+
+Установка движка:
+
+http://ecoponica.ru/wordpress/wp-admin/install.php
 
  Состав кластера:
 
