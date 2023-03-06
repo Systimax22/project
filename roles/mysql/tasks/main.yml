@@ -1,0 +1,35 @@
+---
+- name: Checking pre-requisities on target Machine
+  include_tasks: check-pre-requisities.yml
+
+- name: Including tasks for RedHat Family
+  include_tasks: redhat.yml
+  when: ansible_os_family == 'RedHat'
+
+- name: Including tasks for Debian Family
+  include_tasks: debian.yml
+  when: ansible_os_family == 'Debian'
+
+- name: Including tasks for Configuring MySQL
+  include_tasks: configure.yml
+
+- name: Including tasks to Secure MySQL Installation
+  include_tasks: secure-installation.yml
+
+- name: Including tasks to Replication Setup
+  include_tasks: replication.yml
+  when: replication
+
+- name: Including tasks to Replication Setup
+  include_tasks: database.yml
+  when: database_creation
+
+- name: Including tasks to Replication Setup
+  include_tasks: users.yml
+  when: users_creation
+
+- name: Including tasks for Security
+  include_tasks: cis-secure-configuration.yml
+
+- name: Including tasks for Sanity
+  include_tasks: sanity-check.yml

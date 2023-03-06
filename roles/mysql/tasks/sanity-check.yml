@@ -1,0 +1,25 @@
+---
+- name: Checking MySQL port is healthy or not
+  wait_for:
+    host: "{{ inventory_hostname }}"
+    port: 3306
+    state: started
+  tags:
+    - check_port
+
+- name: Collecting Services facts
+  service_facts:
+
+# - name: Sample Debug Statement
+#   debug:
+#     msg: "{{ hostvars[inventory_hostname]['services'] }}"
+
+- name: Checking MySQL service state for Success
+  debug:
+    msg: "MySQL Service is healthy for {{ inventory_hostname }}"
+  when: hostvars[inventory_hostname]['services']['mysql.service']['state'] == "running"
+
+- name: Checking MySQL service state for Failure
+  fail:
+    msg: "MySQL Service is un-healthy for {{ inventory_hostname }}"
+  when: hostvars[inventory_hostname]['services']['mysql.service']['state'] != "running"

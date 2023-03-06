@@ -1,0 +1,21 @@
+[openvpn]
+vpn ansible_host=194.58.88.155
+
+[frontend]
+frontend1 ansible_host=192.168.10.10
+frontend2 ansible_host=192.168.10.20
+
+[backend]
+nginx1 ansible_host=192.168.10.50
+nginx2 ansible_host=192.168.10.60
+
+[galera_cluster_nodes]
+mysql1 ansible_host=192.168.10.30
+mysql2 ansible_host=192.168.10.40
+
+[all:vars]
+ansible_ssh_user=root
+ansible_ssh_private_key_file=../iid_rsa
+ansible_python_interpreter=/usr/bin/python2.7
+
+

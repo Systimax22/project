@@ -1,0 +1,21 @@
+---
+- name: Updating repository and cache
+  apt:
+    update_cache: yes
+  register: task_result
+  until: task_result is succeeded
+  retries: 5
+  delay: 5
+
+- name: Install and configure MySQL python client
+  set_fact:
+    deb_mysql_python_package: "{% if 'python3' in ansible_python_interpreter|default('') %}python3-mysqldb{% else %}python-mysqldb{% endif %}"
+
+- name: Ensure MySQL Python libraries and Packages are installed.
+  apt:
+    name: ["{{ deb_mysql_python_package }}", "mysql-server-{{ debian_mysql_version }}", "mysql-common"]
+    state: present
+  register: task_result
+  until: task_result is succeeded
+  retries: 5
+  delay: 5

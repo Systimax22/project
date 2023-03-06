@@ -1,0 +1,24 @@
+---
+mysql_daemon: mysql
+mysql_log_file_group: adm
+mysql_slow_query_log_file: /var/log/mysql/mysql-slow.log
+mysql_log_error: /var/log/mysql/mysql.err
+mysql_syslog_tag: mysql
+mysql_pid_file: /var/run/mysqld/mysqld.pid
+mysql_plugin_dir: /usr/lib/mysql/plugin
+mysql_config_file: /etc/mysql/my.cnf
+mysql_config_include_dir: /etc/mysql/conf.d
+mysql_socket: /var/run/mysqld/mysqld.sock
+mysql_supports_innodb_large_prefix: true
+debian_mysql_version: 5.7
+
+mysql_root_username: root
+mysql_root_password: N0Tweak$_@123!
+
+# Same keys as `mysql_users` above.
+mysql_replication_user: {name: slave, password: slaveMaster@123}
+
+mysql_install_packages: true
+replication: true
+users_creation: true
+database_creation: true

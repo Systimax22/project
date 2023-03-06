@@ -1,0 +1,20 @@
+{#
+# Copyright (c) 2021 Markus Falb <markus.falb@mafalb.at>
+# GNU General Public License v3.0+
+# see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
+-#}
+
+{% macro abort(error) %}
+{{ ('')|mandatory(error) }}
+{% endmacro %}
+
+{%- macro directive(key, value) -%}
+{% if value|type_debug == 'list' %}
+
+{% for v in value -%}
+{{ key }} {{ v }}
+{% endfor -%}
+{% else -%}
+{{ key }} {{ value }}
+{%- endif -%}
+{% endmacro -%}

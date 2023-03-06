@@ -1,0 +1,14 @@
+# Copyright (c) 2021 Markus Falb <markus.falb@mafalb.at>
+# GNU General Public License v3.0+
+# see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
+---
+
+- name: reload sshd
+  service:
+    name: "{{ sshd_service }}"
+    state: reloaded
+  when:
+    - not _sshd_was_just_started.changed
+    - not container_build|default(false)
+
+...

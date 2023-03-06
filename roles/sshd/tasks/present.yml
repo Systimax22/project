@@ -1,0 +1,107 @@
+# Copyright (c) 2021,2022 Markus Falb <markus.falb@mafalb.at>
+# GNU General Public License v3.0+
+# see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
+---
+
+- name: debug sshd.cfg
+  debug: var=sshd.cfg
+  tags:
+  - never
+  - debug
+
+- name: assert that Match is a list to avoid nasty jinja2 error
+  assert:
+    that: sshd_config.Match|type_debug == 'list'
+    fail_msg: sshd_config.Match must be a list
+  when:
+  - sshd_config.Match is defined
+  - false
+
+# avoid starting of service before it is configured
+# not strictly necessary
+- name: mask sshd on debian on initial install
+  block:
+    - name: check if ssh service unit is present # noqa command-instead-of-module 303
+      command: systemctl cat {{ sshd_service }}
+      register: __reg_check_for_service_unit
+      changed_when: false
+      failed_when: false
+    - name: sshd is masked
+      ansible.builtin.systemd:
+        name: "{{ sshd_service }}"
+        masked: true
+      when:
+        - __reg_check_for_service_unit.rc != 0
+  when:
+    - ansible_os_family == 'Debian'
+    - not container_build|default(false)
+
+- name: sshd is present
+  package:
+    name: "{{ sshd_extra_packages|default([]) + sshd_packages }}"
+    state: present
+
+- name: sshd is configured
+  block:
+
+  - name: directory for global authorized_keys is present
+    file:
+      path: /etc/ssh/authorized_keys
+      state: directory
+      mode: 00755
+
+  - name: sshd_config.d is present
+    file:
+      path: "{{ sshd_config_d }}"
+      state: directory
+      mode: 00750
+    notify: reload sshd
+    when: sshd_config_has_global_include
+
+  # if the keys does not exist yet
+  # the validation of sshd_config in the next task could fail
+  # so generate the keys manually
+  #
+  - name: hostkeys are generated
+    command: "{{ sshd_keygen_dict[sshd_keytype].command|default(sshd_keygen) }}"
+    args:
+      creates: /etc/ssh/ssh_host_{{ sshd_keygen_dict[sshd_keytype].type|default('*') }}_key
+    loop: "{{ sshd_hostkeytypes }}"
+    loop_control:
+      loop_var: sshd_keytype
+    when: sshd_keygen_dict|default(sshd_keygen) is defined
+
+  # similar situation on Debian
+  # validation fails with
+  #
+  # Missing privilege separation directory: /run/sshd
+  #
+  - name: privilege separation directory
+    file:
+      path: /run/sshd
+      state: directory
+      mode: '755'
+      force: false
+    when: sshd_missing_runtime_dir is defined
+    register: _runtime_dir
+
+  - name: sshd main config is present
+    template:
+      src: "{{ sshd_config_template }}"
+      dest: "{{ sshd_config_file }}"
+      validate: "{{ sshd_validate }}"
+      mode: "{{ sshd_config_mode|default(sshd_config_default_mode) }}"
+      backup: true
+    notify: reload sshd
+
+- name: sshd is started
+  service:
+    name: "{{ sshd_service }}"
+    state: started
+    enabled: true
+    masked: false
+  when: not container_build|default(false)
+
+  register: _sshd_was_just_started
+
+...

@@ -1,0 +1,16 @@
+---
+
+- name: Ensure HAProxy is installed
+  package:
+    name: haproxy
+    state: installed
+  tags:
+  - package
+
+- name: Ensure Keepalived is installed
+  package:
+    name: keepalived
+    state: installed
+  when: haproxy_enable_ha|bool
+  tags:
+  - package

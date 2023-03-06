@@ -1,0 +1,7 @@
+---
+# defaults file for mariadb-galera-cluster
+#
+galera_cluster_group: 'galera_cluster_nodes'
+#
+
+galera_cluster_name: MySQL_cluster

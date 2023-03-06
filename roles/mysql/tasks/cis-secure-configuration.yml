@@ -1,0 +1,35 @@
+---
+- name: Ensure 'datadir', slow-query and plugin Directory Has Appropriate Permissions and Ownership
+  file:
+    path: "{{ item.name }}"
+    owner: mysql
+    group: mysql
+    mode: "{{ item.permission }}"
+  with_items:
+    - {name: "{{ mysql_datadir }}", permission: '0700'}
+    - {name: "{{ mysql_plugin_dir }}", permission: '0755'}
+    - {name: "{{ mysql_slow_query_log_file }}", permission: '0660'}
+
+- name: Ensure 'general_log_file' Has Appropriate Permissions and Ownership
+  file:
+    path: "/var/lib/mysql/{{ ansible_nodename }}.log"
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: 0660
+
+- name: Ensure 'relay_log_basename' Files Have Appropriate Permissions
+  file:
+    path: "/var/lib/mysql/{{ ansible_nodename }}-relay-bin"
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: 0660
+
+- name: Ensure 'log_bin_basename' Files Have Appropriate Permissions
+  file:
+    path: "/var/lib/mysql/mysql-bin"
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: 0660

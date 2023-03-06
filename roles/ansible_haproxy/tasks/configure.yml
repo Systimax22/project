@@ -1,0 +1,139 @@
+---
+
+#
+# HAProxy configuration
+#
+
+- name: Create HAProxy errorfiles and logging directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+  - /etc/haproxy/errors/
+  - /var/log/haproxy/
+  tags:
+  - configure
+
+- name: Extract HTML error files
+  unarchive:
+    src: html_error_pages.tar.gz
+    dest: /etc/haproxy/errors/
+    owner: root
+    group: root
+  tags:
+  - configure
+
+- name: Open firewall for Keepalived VRRP
+  firewalld:
+    rich_rule: 'rule protocol value="vrrp" accept'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  when: haproxy_enable_ha|bool
+  tags:
+  - configure
+
+- name: Find out HAProxy bind ports that need to be open for firewalld
+  set_fact:
+    haproxy_tcp_ports: '{{ haproxy_frontends | map(attribute="binds") | flatten | map("regex_replace", "^.*:([0-9]+)(.*)$", "\1") | list | unique}}'
+  tags:
+  - configure
+
+- debug:
+    var: haproxy_tcp_ports
+  tags:
+  - configure
+
+- name: Configure HAProxy service for firewalld
+  template:
+    src: haproxy-firewalld.j2
+    dest: '{{ haproxy_firewalld_file }}'
+    backup: yes
+    mode: 0644
+  notify: reload firewalld
+  tags:
+  - configure
+
+- name: Force reload of firewalld if necessary to make new service available
+  meta: flush_handlers
+  tags:
+  - configure
+
+- name: Open firewall for incoming HAProxy traffic
+  firewalld:
+    service: '{{ haproxy_firewalld_name }}'
+    permanent: yes
+    immediate: yes
+    state: enabled
+  tags:
+  - configure
+
+- name: Disable HAProxy messages to be logged in '/var/log/messages'
+  lineinfile:
+    path: /etc/rsyslog.conf
+    regexp: '^\*\.info\;mail\.none\;authpriv\.none\;cron\.none.*\/var\/log\/messages'
+    line: '*.info;mail.none;authpriv.none;cron.none;local2.none    /var/log/messages'
+  notify: restart rsyslog
+  tags:
+  - configure
+
+# - name: Allow HAProxy to bind to any port
+#   seboolean:
+#     name: haproxy_connect_any
+#     state: yes
+#     persistent: yes
+#   tags:
+#   - configure
+
+- name: Setup sysctls for HAProxy tuning
+  template:
+    src: haproxy-sysctl.j2
+    dest: '{{ haproxy_sysctl_file }}'
+    backup: yes
+    mode: 0644
+    validate: sysctl -p %s
+  tags:
+  - configure
+
+- name: Add rsyslog config for HAProxy
+  template:
+    src: haproxy-rsyslog.j2
+    dest: '{{ haproxy_rsyslog_file }}'
+    backup: yes
+    mode: 0644
+  notify: restart rsyslog
+  tags:
+  - configure
+
+- name: Enable HAProxy log rotation
+  template:
+    src: haproxy-logrotate.j2
+    dest: '{{ haproxy_logrotate_file }}'
+    mode: 0644
+  tags:
+  - configure
+
+- name: Copy HAProxy configuration
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    backup: yes
+    mode: 0644
+    validate: haproxy -f %s -c -q
+  notify: restart haproxy
+  tags:
+  - configure
+
+#
+# Keepalived configuration
+#
+
+- name: Ensure keepalived conf is set
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    backup: yes
+  notify: restart keepalived
+  when: haproxy_enable_ha|bool
+  tags:
+  - configure

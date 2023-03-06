@@ -1,0 +1,5 @@
+---
+- name: Checking mysql hosts are defined or not
+  fail:
+    msg: "Playbook execution failed due to missing or empty required group 'mysql'"
+  when: groups['mysql'] is not defined or groups['mysql'] | length == 0

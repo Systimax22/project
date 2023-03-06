@@ -1,0 +1,64 @@
+---
+- name: Restarting MySQL before replication setup
+  systemd:
+    name: mysql
+    state: restarted
+
+- name: Setting facts for master
+  set_fact:
+    master_address: "{{ hostvars[groups['master'][0]].ipv4_address|default(hostvars[groups['master'][0]]['ansible_default_ipv4']['address']) }}"
+
+- name: Setting facts for slave
+  set_fact:
+    slave_address: "{{ hostvars[groups['slave'][0]].ipv4_address|default(hostvars[groups['slave'][0]]['ansible_default_ipv4']['address']) }}"
+
+- name: Ensure replication user exists on master.
+  mysql_user:
+    name: "{{ mysql_replication_user.name }}"
+    host: "{{ slave_address | default('%') }}"
+    password: "{{ mysql_replication_user.password }}"
+    priv: "{{ mysql_replication_user.priv | default('*.*:REPLICATION SLAVE,REPLICATION CLIENT') }}"
+    state: present
+  when:
+    - mysql_replication_user.name is defined
+    - inventory_hostname in groups['master']
+
+- name: Check slave replication status.
+  mysql_replication:
+    mode: getslave
+  ignore_errors: true
+  register: slave
+  when:
+    - inventory_hostname in groups['slave']
+    - mysql_replication_user.name is defined
+
+- name: Check master replication status.
+  mysql_replication:
+    mode: getmaster
+  register: master
+  when:
+    # - (slave.Is_Slave is defined and not slave.Is_Slave) or (slave.Is_Slave is not defined and slave is failed)
+    - inventory_hostname in groups['master']
+
+- name: Configure replication on the slave.
+  mysql_replication:
+    mode: changemaster
+    master_host: "{{ master_address }}"
+    master_user: "{{ mysql_replication_user.name }}"
+    master_password: "{{ mysql_replication_user.password }}"
+    master_log_file: "{{ hostvars[groups['master'][0]].master.File }}"
+    master_log_pos: "{{ hostvars[groups['master'][0]].master.Position }}"
+  ignore_errors: true
+  when:
+    - (slave.Is_Slave is defined and not slave.Is_Slave) or (slave.Is_Slave is not defined and slave is failed)
+    - inventory_hostname in groups['slave']
+    - mysql_replication_user.name is defined
+    - mysql_replication_user.password is defined
+
+- name: Start replication.
+  mysql_replication:
+    mode: startslave
+  when:
+    - (slave.Is_Slave is defined and not slave.Is_Slave) or (slave.Is_Slave is not defined and slave is failed)
+    - inventory_hostname in groups['slave']
+    - master_address is defined

@@ -1,0 +1,55 @@
+---
+- name: repo-epel
+  hosts: all
+  roles:
+    - repo-epel
+
+
+- name: Set hostname
+  hosts: all
+  become: true
+  tasks:
+     - name: set system hostname
+       command: hostnamectl set-hostname {{ inventory_hostname }}
+
+- name: yum-install
+  hosts: all
+  become: true
+  tasks:
+    - name: install package
+      yum:
+        name: 
+           - wget
+           - mc
+           - net-tools
+        update_cache: yes
+        state: latest
+      become: yes
+
+
+# - name: It will automate OpenVPN setup
+#   hosts: vpn
+#   become: true
+#   roles:
+#     - role: opstree_devops.openvpn
+- hosts: galera_cluster_nodes
+  roles:
+    - mariadb_galera_cluster
+  become: true
+
+# - hosts: dns_servers
+#   roles:
+#    - role: lucab85.ansible_role_bind
+#      become: yes
+
+
+- hosts: frontend
+  roles:
+   - role: haproxy
+     become: yes
+
+- hosts: backend
+  roles:
+   - bertvv.httpd
+   - bertvv.wordpress
+    

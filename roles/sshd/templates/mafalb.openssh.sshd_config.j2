@@ -1,0 +1,42 @@
+{#
+# Copyright (c) 2021 Markus Falb <markus.falb@mafalb.at>
+# GNU General Public License v3.0+
+# see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
+-#}
+
+{% import 'mafalb.sshd.macros.j2' as sshd_macros -%}
+# {{ ansible_managed }}
+
+{% if sshd_config_has_global_include -%}
+Include /etc/ssh/sshd_config.d/*.conf
+{%- endif -%}
+{% block Overrides -%}
+#
+{% endblock -%}
+
+{% for directive in sshd.cfg|dict2items -%}
+{% if directive.key == 'Match' -%}
+{% if directive.value|type_debug == 'list' -%}
+{% for match_item in directive.value -%}
+{% for match in match_item|dict2items %}
+
+Match {{ match.key }}
+{% for match_directive in match.value|dict2items %}
+    {{ sshd_macros.directive(match_directive.key, match_directive.value) }}
+{% endfor -%}    
+{% endfor -%}
+{% endfor -%}
+{% else -%}
+{% for match in directive.value|dict2items %}
+
+Match {{ match.key }}
+{% for match_directive in match.value|dict2items %}
+    {{ sshd_macros.directive(match_directive.key, match_directive.value) }}
+{% endfor -%}
+{% endfor -%}
+{% endif -%}
+{% else -%}
+{{ sshd_macros.directive(directive.key, directive.value) }}
+{% endif -%}
+{% endfor -%}
+

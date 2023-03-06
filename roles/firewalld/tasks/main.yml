@@ -1,0 +1,39 @@
+---
+- name: merge dictionaries
+  block:
+    - include_vars:
+        file: ../../{{ role_name }}/defaults/main.yml
+        name: firewalld_default_vars
+
+    - name: merge default and new dictionaries
+      set_fact:
+        "{{ item.key }}": "{{ firewalld_default_vars[item.key] | combine(merge[item.key], recursive=True)}}"
+      when: firewalld_default_vars[item.key] is defined
+      with_dict: "{{ merge }}"
+
+    - name: combine defaults vars with merge dictionary
+      set_fact:
+        merge: "{{ firewalld_default_vars | combine(merge, recursive=True)}}"
+  when: merge is defined
+
+- name: firewalld role is disabled
+  meta: end_play
+  when: not firewalld.enabled
+
+- name: include firewalld install
+  include_tasks: ./tasks/01_FirewallD_install.yml
+  when: firewalld_install.enabled
+
+- name: service facts
+  ansible.builtin.service_facts:
+
+- name: include firewalld rules
+  include_tasks: ./tasks/02_FirewallD_rules.yml
+  when: ansible_facts.services is search("firewalld")
+
+- name: "Ensure firewalld is {{ firewalld.service.state }}"
+  ansible.builtin.service:
+    name: firewalld
+    state: "{{ firewalld['service']['state'] }}"
+    enabled: "{{ firewalld['service']['enabled'] }}"
+  when: ansible_facts.services is search("firewalld")

@@ -1,0 +1,19 @@
+# Copyright (c) 2021 Markus Falb <markus.falb@mafalb.at>
+# GNU General Public License v3.0+
+# see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
+---
+
+sshd_packages:
+- openssh-server
+- openssh-sftp-server
+
+sshd_service: ssh
+sftp_subsystem: /usr/lib/openssh/sftp-server
+
+sshd_config_has_global_include: true
+sshd_config_default_mode: '0644'
+sshd_missing_runtime_dir: true
+sshd_gssapiauth: 'no'
+sshd_syslogfacility: AUTH
+
+...

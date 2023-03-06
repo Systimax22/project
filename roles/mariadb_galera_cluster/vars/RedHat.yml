@@ -1,0 +1,11 @@
+#Repository variebles MariaDB 10.3
+repo: "http://mirror.mariadb.org/yum/10.3/centos7-amd64/"
+key: "http://mirror.mariadb.org/yum/RPM-GPG-KEY-MariaDB"
+#
+packages:
+  - MariaDB-server
+  - MariaDB-client
+  - MySQL-python
+  - rsync
+#
+service_db: mariadb
