@@ -19,14 +19,14 @@ if [ -z "$1" ]
       fi
       echo "-- Dumping $I ..."
       # Pipe compress and concat the head/end with the stoutput of mysqlump ( '-' cat argument)
-      mysqldump -u $MYSQL_USER --password=$MYSQL_PASS $I | cat tmp_sqlhead.sql - tmp_sqlend.sql | gzip -fc > "/backup/$I-$(date +%Y-%m-%d).sql.gz"
+      mysqldump --lock-tables -u $MYSQL_USER --password=$MYSQL_PASS $I | cat tmp_sqlhead.sql - tmp_sqlend.sql | gzip -fc > "/backup/$I-$(date +%Y-%m-%d).sql.gz"
     done
 
 else
       I=$1;
       echo "-- Dumping $I ..."
       # Pipe compress and concat the head/end with the stoutput of mysqlump ( '-' cat argument)
-      mysqldump -u $MYSQL_USER --password=$MYSQL_PASS $I | cat tmp_sqlhead.sql - tmp_sqlend.sql | gzip -fc > "/backup/$I-'date %Y-%m-$d'.sql.gz"
+      mysqldump --lock-tables -u $MYSQL_USER --password=$MYSQL_PASS $I | cat tmp_sqlhead.sql - tmp_sqlend.sql | gzip -fc > "/backup/$I-'date %Y-%m-$d'.sql.gz"
 fi
 
 # remove tmp files
