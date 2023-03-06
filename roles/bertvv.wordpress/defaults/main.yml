@@ -5,7 +5,7 @@ wordpress_version: '6.1.1'
 wordpress_database_host: 192.168.10.30
 wordpress_database: wordpress
 wordpress_user: wordpress
-wordpress_password: wordpress
+wordpress_password: 340778
 
 wordpress_plugins: []
 wordpress_themes: []

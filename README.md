@@ -4,6 +4,9 @@
 
 Отказоустойчивый кластер для Wordpress.
 
+http://ecoponica.ru/wordpress/
+
+
  Состав кластера:
 
 Haproxy + keepalived

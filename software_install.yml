@@ -33,10 +33,10 @@
 #   become: true
 #   roles:
 #     - role: opstree_devops.openvpn
-- hosts: galera_cluster_nodes
-  roles:
-    - mariadb_galera_cluster
-  become: true
+# - hosts: galera_cluster_nodes
+#   roles:
+#     - mariadb_galera_cluster
+#   become: true
 
 # - hosts: dns_servers
 #   roles:
